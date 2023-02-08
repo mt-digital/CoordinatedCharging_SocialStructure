@@ -121,11 +121,13 @@ function coordch_model(nagents = 100; neighborhood_1_frac = 0.05,
             # Set neighborhood, workplace details.
             home_neighborhood = 1
             work_neighborhood = rand() < w_1 ? 1 : 2
+
             if work_neighborhood == 1
                 work_learnprob = work_learnprob_1
             else
                 work_learnprob = work_learnprob_2
             end
+
             home_learnprob = home_learnprob_1
 
             # Determine whether the agent should start with coord charge trait.
