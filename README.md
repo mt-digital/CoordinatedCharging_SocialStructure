@@ -1,6 +1,6 @@
-# Minority-group incubators and majority-group reservoirs for climate change adaptation
+# Coordinated Charging and Social Structure
 
-This repository contains code and supporting documentation for the agent-based model analyzed in our paper, "Minority-group incubators and majority-group reservoirs for climate change adaptation".
+This repository contains code and supporting documentation for the agent-based model analyzed in upcoming work tentatively called "Components for a theory of culture to promote the spread of coordinated charging behaviors." It is a fork of [eehh-stanford/SustainableCBA](https://github.com/eehh-stanford/SustainableCBA) in the process of being repurposed for analyzing the spread of the more specific climate change-adaptive behavior, coordinated charging. In this model, there will be two populations living in two separate neighborhoods, and they preferentially work in their own neighborhood. They have the option to engage in a coordinated charging behavior or not, which could be workplace charging or vehicle-to-building, delayed charging in morning instead of directly after work, etc.
 
 
 ## Quick start
@@ -9,7 +9,7 @@ To get started, clone this repository, e.g., execute the following in the
 terminal: 
 
 ```
-git clone https://github.com/eehh-stanford/SustainableCBA.git
+git clone https://github.com/mt-digital/CoordinatedCharging_SocialStructure
 ```
 
 After cloning the repository, install all dependencies by first starting the
@@ -19,9 +19,10 @@ After cloning the repository, install all dependencies by first starting the
 julia> using Pkg; Pkg.activate("."); Pkg.instantiate()
 ```
 
+
 ## Unit tests
 
-We developed our model using test-driven development, which uses small, executable code snippets to confirm the model works as expected and to document model mechanics; see [`src/test/model.jl`](https://github.com/eehh-stanford/SustainableCBA/blob/main/src/test/model.jl) to view the test suite.
+We developed our model using test-driven development, which uses small, executable code snippets to confirm the model works as expected and to document model mechanics; see [`src/test/model.jl`](https://github.com/mt-digital/CoordinatedCharging_SocialStructure/blob/main/src/test/model.jl) to view the test suite.
 
 While still in the REPL, run the unit tests to make sure all is working well:
 
@@ -53,8 +54,6 @@ to run the supplemental analyses. This creates a fresh, distinct version of simu
 
 ## Analysis
 
-Use `main_asymm_heatmaps` to create the main heatmap results of _success rate_ as a function of $h_\mathrm{min}$ and $h_\mathrm{maj}$, which can be found in [`scripts/plot.R`](https://github.com/eehh-stanford/SustainableCBA/blob/main/scripts/plot.R#L72). For creating the heatmaps of average time to model fixation, pass the keyword argument `measure = "step"` to `main_asymm_heatmaps`. Similarly, to create supplemental analyses use the `supp_asymm_heatmaps` function in [`scripts/plot.R`](https://github.com/eehh-stanford/SustainableCBA/blob/main/scripts/plot.R#L15).
+Use `main_asymm_heatmaps` to create the main heatmap results of _success rate_ as a function of $h_\mathrm{min}$ and $h_\mathrm{maj}$, which can be found in [`scripts/plot.R`](https://github.com/mt-digital/CoordinatedCharging_SocialStructure/blob/main/scripts/plot.R#L72). For creating the heatmaps of average time to model fixation, pass the keyword argument `measure = "step"` to `main_asymm_heatmaps`. Similarly, to create supplemental analyses use the `supp_asymm_heatmaps` function in [`scripts/plot.R`](https://github.com/mt-digital/CoordinatedCharging_SocialStructure/blob/main/scripts/plot.R#L15).
 
-To create the heatmaps you need the output data from the simulations presented in our journal article, stored in the `data` folder in the root project directory. To get the data in the right place, first create a `data` directory, then download and unzip the two zip files in our OSF repository: https://osf.io/cd9hx/. 
-
-To create time series of individual model runs, use the `make_all_group_prevalence_comparisons` function in [`scripts/analysis.jl`](https://github.com/eehh-stanford/SustainableCBA/blob/main/scripts/analysis.jl#L290).
+To create time series of individual model runs, use the `make_all_group_prevalence_comparisons` function in [`scripts/analysis.jl`](https://github.com/mt-digital/CoordinatedCharging_SocialStructure/blob/main/scripts/analysis.jl#L290).
