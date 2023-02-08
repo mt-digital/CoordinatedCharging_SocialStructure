@@ -6,13 +6,18 @@ using StatsBase
 @enum Trait a A
 
 
-mutable struct CBA_Agent <: AbstractAgent
+mutable struct Agent <: AbstractAgent
     
     id::Int
+
+    home_neighborhood::Int
+    home_learnprob::Float64
+
+    work_neighborhood::Int
+    work_learnprob::Float64
+
     curr_trait::Trait
     next_trait::Trait
-    group::Int
-    homophily::Float64
 
 end
 
@@ -27,26 +32,25 @@ function model_step!(model)
 end
 
 
-function sample_group(focal_agent, model)
+function select_teacher(focal_agent, model, location; version = "conformist")
 
-    weights = zeros(2)
+    # Begin payoff-biased social learning from teacher within selected group.
+    if location == "work"
+        prospective_teachers = 
+            filter(agent -> ((agent.work_neighborhood == focal_agent.work_neighborhood) 
+                              && (agent != focal_agent)), 
+                   collect(allagents(model)))
 
-    # XXX a waste to calculate this every time.
-    agent_group_weight = (1 + focal_agent.homophily) / 2.0
+    elseif location == "home"
+        prospective_teachers = 
+            filter(agent -> ((agent.home_neighborhood == focal_agent.home_neighborhood) 
+                              && (agent != focal_agent)), 
+                   collect(allagents(model)))
+        
+    else
+        error("location $location must be 'work' or 'home'")
 
-    weights[focal_agent.group] = agent_group_weight
-    weights[1:end .!= focal_agent.group] .= 1 - agent_group_weight
-    
-    return sample(Weights(weights)) 
-end
-
-
-function select_teacher(focal_agent, model, group)
-
-    ## Begin payoff-biased social learning from teacher within selected group.
-    prospective_teachers = 
-        filter(agent -> (agent.group == group) && (agent != focal_agent), 
-               collect(allagents(model)))
+    end
 
     teacher_weights = 
         map(agent -> model.trait_fitness_dict[agent.curr_trait], 
@@ -61,52 +65,73 @@ function select_teacher(focal_agent, model, group)
 end
 
 
-function agent_step!(focal_agent::CBA_Agent, model::ABM)
+function agent_step!(focal_agent::Agent, model::ABM)
 
-    # Agent samples randomly from one of the groups, weighted by homophily.
-    group = sample_group(focal_agent, model)
+    # Do each sub-step corresponding to agent's day at work or home.
+    loc_step!(focal_agent::Agent, model::ABM, "work")
+    loc_step!(focal_agent::Agent, model::ABM, "home")
 
-    #
-    teacher = select_teacher(focal_agent, model, group)
-
-    # Learn from teacher.
-    focal_agent.next_trait = deepcopy(teacher.curr_trait) 
 end
 
 
-function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
-                                  A_fitness = 1.0, a_fitness = 10.0, 
-                                  homophily_1 = 1.0, homophily_2 = 1.0, 
-                                  rep_idx = nothing, model_parameters...)
+function loc_step!(focal_agent::Agent, model::ABM, location::String)
+
+    learnprob = location == "workplace" ? focal_agent.work_learnprob :
+                                          focal_agent.home_learnprob
+
+    # Use probability of learning for location to maybe learn from a teacher.
+    if rand() < learnprob
+        teacher = select_teacher(focal_agent, model, location)
+        focal_agent.next_trait = deepcopy(teacher.curr_trait) 
+    end
+end
+
+##
+# w_i: "preference" for workplace in one's own neighborhood i
+# work_learnprob_i: probability agent learns from workplace in neighborhood i
+# home_learnprob_i: probability agent learns when home from others in neighborhood
+#
+function coordch_model(nagents = 100; neighborhood_1_frac = 0.05, 
+                       neighborhood_w_innovation = 1,
+                       A_fitness = 1.0, a_fitness = 1.2, 
+                       w_1 = 0.5, w_2 = 0.5, work_learnprob_1 = 1.0, work_learnprob_2 = 1.0,
+                       home_learnprob_1 = 1.0, home_learnprob_2 = 1.0, rep_idx = nothing, 
+                       model_parameters...)
 
     trait_fitness_dict = Dict(a => a_fitness, A => A_fitness)
-    ngroups = 2
 
-    if typeof(group_w_innovation) == String
-        if group_w_innovation != "Both"
-            group_w_innovation = parse(Int, group_w_innovation)
+    if typeof(neighborhood_w_innovation) == String
+        if neighborhood_w_innovation != "Both"
+            neighborhood_w_innovation = parse(Int, neighborhood_w_innovation)
         end
     end
 
 
-    properties = @dict trait_fitness_dict ngroups a_fitness homophily_1 homophily_2 group_1_frac rep_idx nagents 
+    properties = @dict trait_fitness_dict a_fitness w_1 w_2 neighborhood_1_frac rep_idx nagents w_1 w_2 work_learnprob_1 work_learnprob_2 home_learnprob_1 home_learnprob_2
 
-    model = ABM(CBA_Agent, scheduler = Schedulers.fastest; properties)
-    flcutoff = ceil(group_1_frac * nagents)
-    group1_cutoff = Int(flcutoff)
+    model = ABM(Agent, scheduler = Schedulers.fastest; properties)
+    flcutoff = ceil(neighborhood_1_frac * nagents)
+    N_1 = Int(flcutoff)
     
     for aidx in 1:nagents
 
         # For now we assume two groups and one or two agents have de novo innovation.
-        if aidx ≤ group1_cutoff
+        if aidx ≤ N_1
 
-            # Set group membership and homophily.
-            group = 1
-            homophily = homophily_1
+            # Set neighborhood, workplace details.
+            home_neighborhood = 1
+            work_neighborhood = rand() < w_1 ? 1 : 2
+            if work_neighborhood == 1
+                work_learnprob = work_learnprob_1
+            else
+                work_learnprob = work_learnprob_2
+            end
+            home_learnprob = home_learnprob_1
 
-            # Determine whether the agent should start with innovation or not.
-            if (((group_w_innovation == 1) || (group_w_innovation == "Both")) 
-                && (aidx == 1))
+            # Determine whether the agent should start with coord charge trait.
+            if (((neighborhood_w_innovation == 1) 
+                  || (neighborhood_w_innovation == "Both")) 
+                  && (aidx == 1))
 
                 trait = a
             else
@@ -114,13 +139,20 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
             end
         else
 
-            # Set group membership and homophily.
-            group = 2
-            homophily = homophily_2
+            # Set neighborhood, workplace details.
+            home_neighborhood = 2
+            work_neighborhood = rand() < w_2 ? 2 : 1
+            if work_neighborhood == 1
+                work_learnprob = work_learnprob_1
+            else
+                work_learnprob = work_learnprob_2
+            end
+            home_learnprob = home_learnprob_2
+
 
             # Determine whether the agent should start with innovation or not.
-            if (((group_w_innovation == 2) || (group_w_innovation == "Both")) 
-                && (aidx == group1_cutoff + 1))
+            if (((neighborhood_w_innovation == 2) || (neighborhood_w_innovation == "Both")) 
+                && (aidx == N_1 + 1))
 
                 trait = a
             else
@@ -128,7 +160,10 @@ function cba_model(nagents = 100; group_1_frac = 1.0, group_w_innovation = 1,
             end
         end
         
-        agent_to_add = CBA_Agent(aidx, trait, trait, group, homophily)
+        agent_to_add = Agent(aidx, 
+                             home_neighborhood, home_learnprob, 
+                             work_neighborhood, work_learnprob, 
+                             trait, trait)
 
         add_agent!(agent_to_add, model)
     end
