@@ -32,7 +32,7 @@ function model_step!(model)
 end
 
 
-function select_teacher(focal_agent, model, location; version = "conformist")
+function select_teacher(focal_agent, model, location)
 
     # Begin payoff-biased social learning from teacher within selected group.
     if location == "work"
@@ -54,7 +54,7 @@ function select_teacher(focal_agent, model, location; version = "conformist")
 
     teacher_weights = 
         map(agent -> model.trait_fitness_dict[agent.curr_trait], 
-                              prospective_teachers)
+            prospective_teachers)
 
     # Renormalize weights.
     denom = Float64(sum(teacher_weights))
@@ -65,6 +65,7 @@ function select_teacher(focal_agent, model, location; version = "conformist")
 end
 
 
+# Agent step represents one work day for an agent, half day at work, half at home.
 function agent_step!(focal_agent::Agent, model::ABM)
 
     # Do each sub-step corresponding to agent's day at work or home.
@@ -74,10 +75,11 @@ function agent_step!(focal_agent::Agent, model::ABM)
 end
 
 
+# Generic function for agent step either at "home" or "work" `loc`ation.
 function loc_step!(focal_agent::Agent, model::ABM, location::String)
 
-    learnprob = location == "workplace" ? focal_agent.work_learnprob :
-                                          focal_agent.home_learnprob
+    learnprob = location == "work" ? focal_agent.work_learnprob :
+                                     focal_agent.home_learnprob
 
     # Use probability of learning for location to maybe learn from a teacher.
     if rand() < learnprob
