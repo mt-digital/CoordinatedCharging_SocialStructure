@@ -42,7 +42,7 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
         @dict homophily_1 homophily_2 group_1_frac a_fitness rep_idx
     )
 
-    models = [cba_model(nagents; group_w_innovation, params...) 
+    models = [coordcgh_model(nagents; group_w_innovation, params...) 
               for params in params_list]
 
     # adata = [(:curr_trait, fixated)]

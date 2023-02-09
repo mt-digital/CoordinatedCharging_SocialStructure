@@ -7,41 +7,80 @@ include("../model.jl")
 Random.seed!()
 
 
-@testset "Groups are initialized as expected" begin
+@testset "home and work neighborhoods are initialized as expected" begin
 
-    m = cba_model(4; group_1_frac = 0.5, homophily = 0.0, a_fitness = 2.0)
+    m = coordchg_model(4; neighborhood_1_frac = 0.5, 
+                          w_1 = 1.0, w_2 = 1.0, a_fitness = 2.0)
 
     agents = collect(allagents(m))
     @test length(agents) == 4
 
-    ngroup1 = length(filter(agent -> agent.group == 1, agents))
-    ngroup2 = length(filter(agent -> agent.group == 2, agents))
+    n_home_neigh_1 = length(filter(agent -> agent.home_neighborhood == 1, agents))
+    n_home_neigh_2 = length(filter(agent -> agent.home_neighborhood == 2, agents))
 
-    @test ngroup1 == 2 
-    @test ngroup1 == ngroup2 
+    n_work_neigh_1 = length(filter(agent -> agent.work_neighborhood == 1, agents))
+    n_work_neigh_2 = length(filter(agent -> agent.work_neighborhood == 2, agents))
 
-    @test m[1].group == 1
-    @test m[2].group == 1
-    @test m[3].group == 2
-    @test m[4].group == 2
+    @test n_home_neigh_1 == 2 
+    @test n_home_neigh_1 == n_home_neigh_2 
+
+    @test n_work_neigh_1 == 2 
+    @test n_work_neigh_1 == n_work_neigh_2 
+
+    @test m[1].home_neighborhood == 1
+    @test m[2].home_neighborhood == 1
+    @test m[3].home_neighborhood == 2
+    @test m[4].home_neighborhood == 2
+
+    @test m[1].work_neighborhood == 1
+    @test m[2].work_neighborhood == 1
+    @test m[3].work_neighborhood == 2
+    @test m[4].work_neighborhood == 2
 
     @test m[1].curr_trait == a
     @test m[2].curr_trait == A
     @test m[3].curr_trait == A
     @test m[4].curr_trait == A
 
-    m = cba_model(4; group_1_frac = 0.25, group_w_innovation = 2, 
-                  homophily = 0.0, a_fitness = 2.0)
+    m = coordchg_model(4; neighborhood_1_frac = 0.25, neighborhood_w_innovation = 2, 
+                          w_1 = 1.0, w_2 = 1.0, a_fitness = 2.0)
 
-    @test m[1].group == 1
-    @test m[2].group == 2
-    @test m[3].group == 2
-    @test m[4].group == 2
+    @test m[1].home_neighborhood == 1
+    @test m[2].home_neighborhood == 2
+    @test m[3].home_neighborhood == 2
+    @test m[4].home_neighborhood == 2
+
+    @test m[1].work_neighborhood == 1
+    @test m[2].work_neighborhood == 2
+    @test m[3].work_neighborhood == 2
+    @test m[4].work_neighborhood == 2
 
     @test m[1].curr_trait == A
     @test m[2].curr_trait == a
     @test m[3].curr_trait == A
     @test m[4].curr_trait == A
+
+
+    m = coordchg_model(1_000_000; neighborhood_1_frac = 0.15, 
+                              neighborhood_w_innovation = 1,
+                              w_1 = 0.25, w_2 = 0.8)
+
+    agents = collect(allagents(m))
+    @test length(agents) == 1_000_000
+    
+    n_home_neigh_1 = length(filter(agent -> agent.home_neighborhood == 1, agents))
+    n_home_neigh_2 = length(filter(agent -> agent.home_neighborhood == 2, agents))
+
+    n_work_neigh_1 = length(filter(agent -> agent.work_neighborhood == 1, agents))
+    n_work_neigh_2 = length(filter(agent -> agent.work_neighborhood == 2, agents))
+
+    @test n_home_neigh_1 == 150_000
+    @test n_home_neigh_2 == 850_000
+
+    @test n_work_neigh_1 ≈ (n_home_neigh_1 * 0.25) + (n_home_neigh_2 * 0.2) rtol=0.01
+    @test n_work_neigh_2 ≈ (n_home_neigh_1 * 0.75) + (n_home_neigh_2 * 0.8) rtol=0.01
+
+    
 end
 
 
@@ -49,8 +88,11 @@ end
 
     ntrials = 10000
 
-    @testset "Teacher-group and teacher selection works for extreme homophily values" begin
-        m = cba_model(4; group_1_frac = 0.25, homophily_1 = 1.0, homophily_2 = 1.0,
+    # TODO this should check that there are enough teachers for the out-group
+    # to learn from to understand why no agents who live in neighborhood 2
+    # are learning from those who live in neighborhood 1.
+    @testset "Teacher-group and teacher selection works for extreme home-work correlation values, w" begin
+        m = coordchg_model(4; group_1_frac = 0.25, w_1 = 1.0, w_2 = 1.0,
                       a_fitness = 2.0)
         
         @test sample_group(m[1], m) == 1
@@ -58,8 +100,8 @@ end
         @test sample_group(m[3], m) == 2
         @test sample_group(m[4], m) == 2
 
-        # m = cba_model(4; group_1_frac = 0.25, homophily = 0.0, a_fitness = 1e9)
-        m = cba_model(4; group_1_frac = 0.25, homophily_1 = 0.0, homophily_2 = 0.0, 
+        # m = coordchg_model(4; group_1_frac = 0.25, w = 0.0, a_fitness = 1e9)
+        m = coordchg_model(4; group_1_frac = 0.25, w_1 = 0.0, w_2 = 0.0, 
                          a_fitness = 1e9)
         
         for aidx in 1:4
@@ -73,9 +115,9 @@ end
     end
 
     # Confirm groups are initialized as expected and that teacher selection 
-    # works as expected for asymmetric, non-zero homophily. 
-    m = cba_model(4; group_1_frac = 0.5, homophily_1 = 0.75, 
-                     homophily_2 = 0.25, a_fitness = 1e2)
+    # works as expected for asymmetric, non-zero w. 
+    m = coordchg_model(4; group_1_frac = 0.5, w_1 = 0.75, 
+                     w_2 = 0.25, a_fitness = 1e2)
 
     agents = collect(allagents(m))
 
@@ -90,7 +132,7 @@ end
         @test n_group2 == 2
     end
 
-    @testset "Asymmetric homophily produces correct teacher selection stats (Agent $ii)" for ii in 1:4
+    @testset "Asymmetric w produces correct teacher selection stats (Agent $ii)" for ii in 1:4
 
         teachers_selected = [
             select_teacher(m[ii], m, sample_group(m[ii], m))
@@ -100,7 +142,7 @@ end
         @test ii ∉ map(a -> a.id, teachers_selected)
 
         # Contants below multiplying ntrials calculated
-        # from homophily values given above.
+        # from w values given above.
         if ii ∈ [1, 2]
             @test length(filter(a -> a.group == 1, teachers_selected)) ≈ (0.875 * ntrials) rtol=0.1
             @test length(filter(a -> a.group == 2, teachers_selected)) ≈ (0.125 * ntrials) rtol=0.1

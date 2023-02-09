@@ -91,7 +91,7 @@ end
 # work_learnprob_i: probability agent learns from workplace in neighborhood i
 # home_learnprob_i: probability agent learns when home from others in neighborhood
 #
-function coordch_model(nagents = 100; neighborhood_1_frac = 0.05, 
+function coordchg_model(nagents = 100; neighborhood_1_frac = 0.05, 
                        neighborhood_w_innovation = 1,
                        A_fitness = 1.0, a_fitness = 1.2, 
                        w_1 = 0.5, w_2 = 0.5, work_learnprob_1 = 1.0, work_learnprob_2 = 1.0,
