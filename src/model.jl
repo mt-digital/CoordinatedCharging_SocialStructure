@@ -29,6 +29,7 @@ function model_step!(model)
     for agent in agents
         agent.curr_trait = agent.next_trait
     end
+
 end
 
 
@@ -62,6 +63,7 @@ function select_teacher(focal_agent, model, location)
 
     # Select teacher.
     return sample(prospective_teachers, Weights(teacher_weights))
+
 end
 
 
@@ -96,8 +98,10 @@ end
 function coordchg_model(nagents = 100; neighborhood_1_frac = 0.05, 
                        neighborhood_w_innovation = 1,
                        A_fitness = 1.0, a_fitness = 1.2, 
-                       w_1 = 0.5, w_2 = 0.5, work_learnprob_1 = 1.0, work_learnprob_2 = 1.0,
-                       home_learnprob_1 = 1.0, home_learnprob_2 = 1.0, rep_idx = nothing, 
+                       w_1 = 0.5, w_2 = 0.5, 
+                       work_learnprob_1 = 1.0, work_learnprob_2 = 1.0,
+                       home_learnprob_1 = 1.0, home_learnprob_2 = 1.0, 
+                       rep_idx = nothing, 
                        model_parameters...)
 
     trait_fitness_dict = Dict(a => a_fitness, A => A_fitness)
@@ -112,8 +116,9 @@ function coordchg_model(nagents = 100; neighborhood_1_frac = 0.05,
     properties = @dict trait_fitness_dict a_fitness w_1 w_2 neighborhood_1_frac rep_idx nagents w_1 w_2 work_learnprob_1 work_learnprob_2 home_learnprob_1 home_learnprob_2
 
     model = ABM(Agent, scheduler = Schedulers.fastest; properties)
-    flcutoff = ceil(neighborhood_1_frac * nagents)
-    N_1 = Int(flcutoff)
+    N_1_ceil_cutoff = ceil(neighborhood_1_frac * nagents)
+
+    N_1 = Int(N_1_ceil_cutoff)
     
     for aidx in 1:nagents
 

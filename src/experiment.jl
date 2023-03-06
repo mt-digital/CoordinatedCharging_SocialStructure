@@ -4,8 +4,6 @@ using Distributed
 using StatsBase
 
 
-
-
 # Set up multiprocessing.
 try
     num_cores = parse(Int, ENV["SLURM_CPUS_PER_TASK"])
@@ -24,14 +22,13 @@ end
 @everywhere include("model.jl")
 
 
-function homophily_minority_experiment(nagents=100; a_fitness = 2.0, 
-                                       homophily = [
-                                        collect(0.0:0.05:0.95)..., 0.99
-                                       ],
-                                       group_1_frac = collect(0.05:0.05:0.5), 
-                                       nreplicates=10, group_w_innovation = 1,
-                                       allsteps = false
-    )
+function coordch_experiment(nagents=100; a_fitness = 2.0, 
+                            homophily = [
+                             collect(0.0:0.05:0.95)..., 0.99
+                            ],
+                            neighborhood_1_frac = collect(0.05:0.05:0.5), 
+                            neighborhood_w_innovation = 1, nreplicates=10, 
+                            allsteps = false)
 
     rep_idx = collect(1:nreplicates)
 
@@ -76,8 +73,5 @@ function homophily_minority_experiment(nagents=100; a_fitness = 2.0,
 
     println(first(res, 15))
 
-    # @assert sort(unique(res.frac_a_curr_trait)) == [0.0, 1.0]
-
     return res
 end
-
