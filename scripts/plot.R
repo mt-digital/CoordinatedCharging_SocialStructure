@@ -13,21 +13,21 @@ mytheme = theme(axis.line = element_line(), legend.key=element_rect(fill = NA),
                 panel.background = element_rect(fill = "white"))
 
 supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figures/supp") {
-  group_w_vals <- c("1", "2", "Both")
+  neighborhood_w_vals <- c("1", "2", "Both")
   
-  # group_w_vals <- c("1")
-  for (group_w_innovation in group_w_vals) {
+  # neighborhood_w_vals <- c("1")
+  for (neighborhood_w_innovation in neighborhood_w_vals) {
     
     files <- list.files(csv_dir, 
-                        pattern = paste0("group_w_innovation=", group_w_innovation),
+                        pattern = paste0("neighborhood_w_innovation=", neighborhood_w_innovation),
                         full.names = TRUE)
     
     tbl_part <- files %>%
       map_df(~read_csv(., show_col_types = FALSE))
     
-    tbl_part$group_w_innovation = group_w_innovation
+    tbl_part$neighborhood_w_innovation = neighborhood_w_innovation
     
-    if (group_w_innovation == "1") {
+    if (neighborhood_w_innovation == "1") {
       tbl <- tbl_part
     }
     else {
@@ -35,33 +35,33 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
     }
   }
   
-  for (group_w_innovation in group_w_vals) {
+  for (neighborhood_w_innovation in neighborhood_w_vals) {
     # nagents sensitivity.
     for (this_nagents in c(50, 100, 200)) {
       
       this_tbl <- tbl[tbl$nagents == this_nagents, ]
       this_write_dir <- file.path(write_dir, "nagents", this_nagents)
-      write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
+      write_path <- file.path(this_write_dir, paste0(neighborhood_w_innovation, ".pdf"))
       
-      asymm_heatmap(this_tbl, group_w_innovation, write_path)
+      asymm_heatmap(this_tbl, neighborhood_w_innovation, write_path)
     }
-    # minority group size sensitivity.
-    for (this_group_1_frac in c(0.2, 0.35, 0.5)) {
+    # minority neighborhood size sensitivity.
+    for (this_neighborhood_1_frac in c(0.2, 0.35, 0.5)) {
       
-      this_tbl <- tbl[tbl$group_1_frac == this_group_1_frac, ]
-      this_write_dir <- file.path(write_dir, "m", this_group_1_frac)
-      write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
+      this_tbl <- tbl[tbl$neighborhood_1_frac == this_neighborhood_1_frac, ]
+      this_write_dir <- file.path(write_dir, "m", this_neighborhood_1_frac)
+      write_path <- file.path(this_write_dir, paste0(neighborhood_w_innovation, ".pdf"))
       
-      asymm_heatmap(this_tbl, group_w_innovation, write_path)
+      asymm_heatmap(this_tbl, neighborhood_w_innovation, write_path)
     }
     # f(a) sensitivity.
     for (this_a_fitness in c(1.05, 1.4, 2.0)) {
       
       this_tbl <- tbl[tbl$a_fitness == this_a_fitness, ]
       this_write_dir <- file.path(write_dir, "a_fitness", this_a_fitness)
-      write_path <- file.path(this_write_dir, paste0(group_w_innovation, ".pdf"))
+      write_path <- file.path(this_write_dir, paste0(neighborhood_w_innovation, ".pdf"))
       
-      asymm_heatmap(this_tbl, group_w_innovation, write_path)
+      asymm_heatmap(this_tbl, neighborhood_w_innovation, write_path)
     }
   }
 
@@ -69,24 +69,25 @@ supp_asymm_heatmaps <- function(csv_dir = "data/supp_parts", write_dir = "figure
   # 
 }
 
-main_asymm_heatmaps <- function(csv_dir = "data/main_parts", write_dir = "figures/heatmaps/main", measure = "sustainability")
+main_asymm_heatmaps <- function(csv_dir = "data/main_parts", write_dir = "figures/heatmaps/main", measure = "success_rate")
 {
   
   # for (group_w_innovation in c(1, 2, "Both")) {
-  group_w_vals <- c("1", "2", "Both")
+  neighborhood_w_vals <- c("1", "2", "Both")
   # group_w_vals <- c("1")
-  for (group_w_innovation in group_w_vals) {
+  for (neighborhood_w_innovation in neighborhood_w_vals) {
     
     files <- list.files("data/main_parts", 
-               pattern = paste0("group_w_innovation=", group_w_innovation),
-               full.names = TRUE)
+                        pattern = paste0("neighborhood_w_innovation=", 
+                                         neighborhood_w_innovation),
+                        full.names = TRUE)
     
     tbl_part <- files %>%
       map_df(~read_csv(., show_col_types = FALSE))
     
-    tbl_part$group_w_innovation = group_w_innovation
+    tbl_part$neighborhood_w_innovation = neighborhood_w_innovation
     
-    if (group_w_innovation == "1") {
+    if (neighborhood_w_innovation == "1") {
       tbl <- tbl_part
     }
     else {
@@ -94,76 +95,73 @@ main_asymm_heatmaps <- function(csv_dir = "data/main_parts", write_dir = "figure
     }
   }
   
+  print(tbl) 
   
+  # return (asymm_heatmap(tbl, neighborhood_w_innovation, file.path(write_dir, paste0(neighborhood_w_innovation, ".pdf"))))
   
-  # return (asymm_heatmap(tbl, group_w_innovation, file.path(write_dir, paste0(group_w_innovation, ".pdf"))))
-  
-  for (group_w_innovation in group_w_vals) {
+  for (neighborhood_w_innovation in neighborhood_w_vals) {
     
-    asymm_heatmap(tbl, group_w_innovation, 
-                  file.path(write_dir, paste0(group_w_innovation, ".pdf")),
+    asymm_heatmap(tbl, neighborhood_w_innovation, 
+                  file.path(write_dir, paste0(neighborhood_w_innovation, ".pdf")),
                   measure)
+
   }
-  
-  # for (csv_loc in list.files(csv_dir, full.names = TRUE)) {
-  #   asymm_heatmap(csv_loc, write_dir)
-  # }
 }
 
 
-asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path, measure = "sustainability") {
+asymm_heatmap <- function(asymm_tbl, this_neighborhood_w_innovation, write_path, measure = "success_rate") {
   
   asymm_agg <- asymm_tbl %>%
-    filter(homophily_1 != 0.99) %>% 
-    filter(homophily_2 != 0.99) %>%
-    group_by(homophily_1, homophily_2, group_w_innovation) %>%
-    summarize(sustainability = mean(frac_a_curr_trait),
+    filter(home_is_work_prob_1 != 0.99) %>% 
+    filter(home_is_work_prob_2 != 0.99) %>%
+    group_by(home_is_work_prob_1, home_is_work_prob_2, neighborhood_w_innovation) %>%
+    summarize(success_rate = mean(frac_a_curr_trait),
               step = mean(step))
   # return (asymm_agg)
     # asymm_tbl %>% 
     #   subset(group_w_innovation == this_group_w_innovation)
-  asymm_lim_agg <- asymm_agg[asymm_agg$group_w_innovation == this_group_w_innovation, ]
+  asymm_lim_agg <- asymm_agg[asymm_agg$neighborhood_w_innovation == this_neighborhood_w_innovation, ]
   
-  print(unique(asymm_lim_agg$group_w_innovation))
+  print(unique(asymm_lim_agg$neighborhood_w_innovation))
   print(head(asymm_lim_agg))
   
   # asymm_lim_aggregated <- asymm_lim_aggregated %>%
   
-  if (measure == "sustainability") {
+  if (measure == "success_rate") {
   
     asymm_max_line <-
       asymm_lim_agg %>% 
-        group_by(homophily_1) %>% 
-        filter(sustainability == max(sustainability))
+        group_by(home_is_work_prob_1) %>% 
+        filter(success_rate == max(success_rate))
     
     print(asymm_max_line)
-    max_sustainability <- 
-      asymm_max_line[asymm_max_line$sustainability == 
-                       max(asymm_max_line$sustainability), ]
+    max_success_rate <- 
+      asymm_max_line[asymm_max_line$success_rate == 
+                       max(asymm_max_line$success_rate), ]
   } else if (measure == "step") {
     asymm_max_line <-
       asymm_lim_agg %>% 
-      group_by(homophily_1) %>% 
+      group_by(home_is_work_prob_1) %>% 
       filter(step == max(step))
     
     print(asymm_max_line)
-    max_sustainability <- 
+    max_success_rate <- 
       asymm_max_line[asymm_max_line$step == 
                        max(asymm_max_line$step), ]
   } else {
     stop ("measure not recognized")
   }
   
-  h1max <- max_sustainability$homophily_1
-  h2max <- max_sustainability$homophily_2
+  h1max <- max_success_rate$home_is_work_prob_1
+  h2max <- max_success_rate$home_is_work_prob_2
   
-  # print(paste("Maximum sustainability ", max_sustainability$sustainability[1], ", at h1 = ", h1max, " h2 = ", h2max))
+  # print(paste("Maximum success_rate ", max_success_rate$success_rate[1], ", at h1 = ", h1max, " h2 = ", h2max))
   
-  if (measure == "sustainability") {
-    ggplotstart <- ggplot(asymm_lim_agg, aes(x = homophily_1, y = homophily_2, fill = sustainability))
-    measure_label <- "Sweep frequency"
+  if (measure == "success_rate") {
+    ggplotstart <- ggplot(asymm_lim_agg, aes(x = home_is_work_prob_1, y = home_is_work_prob_2, fill = success_rate))
+    measure_label <- "Success\nrate"
   } else if (measure == "step") {
-    ggplotstart <- ggplot(asymm_lim_agg, aes(x = homophily_1, y = homophily_2, fill = step))
+    ggplotstart <- ggplot(asymm_lim_agg, aes(x = home_is_work_prob_1, y = home_is_work_prob_2, fill = step))
     measure_label <- "Mean steps"
   } else {
     stop("Measure not recognized.")
@@ -172,11 +170,15 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path, measur
    ggplotstart + 
     geom_tile() +
     scale_fill_gradient2(low = "#000000", mid = "#010101", high = "#FFFFFF") +
-    geom_point(data = asymm_max_line, aes(x = homophily_1, y = homophily_2)) +
-    geom_smooth(data = asymm_max_line, aes(x = homophily_1, y = homophily_2), se=FALSE) +
-    geom_point(data = max_sustainability, aes(x=homophily_1, y=homophily_2), 
+    geom_point(data = asymm_max_line, aes(x = home_is_work_prob_1, y = home_is_work_prob_2)) +
+    geom_smooth(data = asymm_max_line, aes(x = home_is_work_prob_1, y = home_is_work_prob_2), se=FALSE) +
+
+    geom_point(data = max_success_rate, aes(x=home_is_work_prob_1, y=home_is_work_prob_2), 
                shape='diamond', size=5, color='red') +
-    labs(x = "Minority group homophily", y = "Majority group homophily") +
+
+    labs(x = TeX("Minority neighborhood home-work corr., $w_{min}"), 
+         y = TeX("Majority neighborhood home-work corr., $w_{maj}")) +
+
     coord_fixed() + labs(fill = measure_label) +
     mytheme
     

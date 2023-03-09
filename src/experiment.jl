@@ -22,15 +22,15 @@ end
 @everywhere include("model.jl")
 
 
-function coordch_experiment(nagents=100; a_fitness = 1.2, 
-                            neighborhood_1_frac = collect(0.05:0.05:0.5), 
+function coordchg_experiment(nagents=100; a_fitness = 1.2, 
+                            neighborhood_1_frac = collect(0.1:0.1:0.5), 
                             neighborhood_w_innovation = 1, 
-                            home_is_work_prob_1 = [0.2, 0.5, 0.8],
-                            home_is_work_prob_2 = [0.2, 0.5, 0.8],
-                            learn_at_home_prob_1 = [0.2, 0.5, 0.8],
-                            learn_at_home_prob_2 = [0.2, 0.5, 0.8],
-                            learn_at_work_prob_1 = [0.2, 0.5, 0.8],
-                            learn_at_work_prob_2 = [0.2, 0.5, 0.8],
+                            home_is_work_prob_1 =  collect(0.1:0.2:0.9),
+                            home_is_work_prob_2 =  collect(0.1:0.2:0.9),
+                            learn_at_home_prob_1 = [0.5],
+                            learn_at_home_prob_2 = [0.5],
+                            learn_at_work_prob_1 = [0.5],
+                            learn_at_work_prob_2 = [0.5],
                             nreplicates=10, 
                             allsteps = false)
 
@@ -40,7 +40,7 @@ function coordch_experiment(nagents=100; a_fitness = 1.2,
         @dict a_fitness neighborhood_1_frac home_is_work_prob_1 home_is_work_prob_2 learn_at_home_prob_1 learn_at_home_prob_2 learn_at_work_prob_1 learn_at_work_prob_2 rep_idx
     )
 
-    models = [coordcgh_model(nagents; neighborhood_w_innovation, params...) 
+    models = [coordchg_model(nagents; neighborhood_w_innovation, params...) 
               for params in params_list]
 
     # adata = [(:curr_trait, fixated)]
@@ -53,7 +53,7 @@ function coordch_experiment(nagents=100; a_fitness = 1.2,
              (:curr_trait, frac_a_ifdata, !is_minority),
             ]
 
-    mdata = [:a_fitness, :neighborhood_1_frac, :nagents, :rep_idx, :w_1, :w_2]
+    mdata = [:a_fitness, :neighborhood_1_frac, :nagents, :rep_idx, :home_is_work_prob_1, :home_is_work_prob_2]
 
     function stopfn_fixated(model, step)
         agents = allagents(model)

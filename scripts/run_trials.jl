@@ -33,8 +33,8 @@ function parse_cli()
             arg_type = Int
             default = 100
 
-        "--group_1_frac", "-m"
-            help = "Fraction of population that is in minority"
+        "--neighborhood_1_frac", "-m"
+            help = "Fraction of population with home in minority neighborhood"
             arg_type = Float64
             default = 0.05
 
@@ -43,8 +43,8 @@ function parse_cli()
             arg_type = Float64
             default = 1.2
 
-        "--group_w_innovation"
-            help = "Group that should start with the innovation: 1, 2, or 'Both'"
+        "--neighborhood_w_innovation"
+            help = "Neighborhood that should start with the innovation: 1, 2, or 'Both'"
             required = true
 
         "--nagents", "-N"
@@ -72,7 +72,7 @@ function run_trials(nreplicates = 20;
     nagents = pop!(kwargs_dict, :nagents)
     kwargs_dict[:nreplicates] = nreplicates
 
-    result_df = homophily_minority_experiment(nagents; kwargs_dict...)
+    result_df = coordchg_experiment(nagents; kwargs_dict...)
 
     CSV.write(outputfilename, result_df)
 
@@ -83,12 +83,16 @@ end
 
 
 function main()
+
+    # Read command-line interfact (cli) arguments as dictionary.
     parsed_args = parse_cli()
 
-    # Create job id for unique filename.
+    # Create job id for unique filename and add to function arguments for 
+    # easy addition to the output CSV file name.
     parsed_args["jobid"] = string(uuid4())
     println(parsed_args)
 
+    # Read and remove datadirname from cli arguments.
     datadirname = pop!(parsed_args, "datadirname")
     nameargs = copy(parsed_args)
 
