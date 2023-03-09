@@ -186,7 +186,7 @@ asymm_heatmap <- function(asymm_tbl, this_group_w_innovation, write_path, measur
 }
 
 
-plot_group_freq_series <- function(csv_loc, write_dir = "figures/group_prevalence") {
+plot_neighborhood_freq_series <- function(csv_loc, write_dir = "figures/neighborhood_prevalence") {
 
     df <- read.csv(csv_loc)
     names(df) <- c("step", "frac_a", "Minority", "Majority", "Trial")
@@ -195,12 +195,12 @@ plot_group_freq_series <- function(csv_loc, write_dir = "figures/group_prevalenc
     df <- filter(df, Trial <= enslim)
     df$Trial = factor(df$Trial, levels = 1:enslim)
   
-  df <- melt(df, id=c("step", "Trial"), value.name = "Frequency", variable.name = "Group")
+  df <- melt(df, id=c("step", "Trial"), value.name = "Frequency", variable.name = "Neighborhood")
 
   ggplot(df, aes(x=step, y=Frequency)) + 
-    geom_line(aes(color=Trial, linetype=Group), lwd=0.8) +
+    geom_line(aes(color=Trial, linetype=Neighborhood), lwd=0.8) +
     # geom_line(aes(x=step, y=frac_a_max, color=Trial, linetype="Majority"), linetype=1, lwd=1.05) +
-    xlab("Step") + ylab(TeX(r"(Adaptation prevalence)")) +
+    xlab("Step") + ylab(TeX(r"(Coord. charging prevalence)")) +
     # scale_linetype_manual(name = "Group", values=c("Majority", "Minority"), labels = c("Majority", "Minority")) +
     mytheme #+ guides(color=guide_legend(override.aes=list(fill=NA))) 
   

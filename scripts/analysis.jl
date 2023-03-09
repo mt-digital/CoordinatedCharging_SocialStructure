@@ -287,50 +287,52 @@ end
 """
 Run simulations to understand time series of adaptation prevalence by group.
 """
-function make_all_group_prevalence_comparisons(nagents = 100; ntrials = 10, 
-        group_1_frac = 0.05, group_w_innovation = "Both", a_fitness = 1.2, 
-        homophily_pairs = [(0.1, 0.1), (0.75, 0.75), (0.99, 0.99)],
-            # [(0.0, 0.0), (0.1, 0.1), (0.1, 0.75), (0.75, 0.75), (0.75, 0.1), 
-            #  (0.1, 0.99), (0.99, 0.1), (0.99, 0.99)],
-        csv_write_dir = joinpath("data", "group_prevalence"),
+function plot_series(nagents = 100; ntrials = 10, 
+        neighborhood_1_frac = 0.2, neighborhood_w_innovation = "Both", 
+        a_fitness = 1.2, home_is_work_prob_pairs = [(0.5, 0.5), (0.8, 0.2)],
+        learn_at_home_prob_1 = 0.2, learn_at_home_prob_2 = 0.2,
+        learn_at_work_prob_1 = 0.8, learn_at_work_prob_2 = 0.8,
+        csv_write_dir = joinpath("data", "neighborhood_prevalence"),
         base_pdf_write_dir = 
-            joinpath("..", "Writing", "SustainableCBA_Paper", "Figures", "series")
+            joinpath("..", "Writing", "CoordinatedCharging_SocialStructure_Paper", "Figures", "series")
     )
 
     R"""
     source("scripts/plot.R")
     """
     
-    for (homophily_1, homophily_2) in homophily_pairs
+    for (home_is_work_prob_1, home_is_work_prob_2) in home_is_work_prob_pairs
 
-        println(savename(@dict homophily_1 homophily_2))
+        println(savename(@dict home_is_work_prob_1 home_is_work_prob_2))
 
-        model_kwargs = @dict homophily_1 homophily_2 group_1_frac group_w_innovation a_fitness
+        model_kwargs = @dict home_is_work_prob_1 home_is_work_prob_2 neighborhood_1_frac neighborhood_w_innovation a_fitness
 
-        adf, mdf = compare_group_prevalence(nagents; ntrials, model_kwargs...)
+        # Run simulations that will be used for plotting in timeseries.
+        adf, mdf = run_simulations_for_plot_series(nagents; ntrials, model_kwargs...)
 
         model_kwargs[:nagents] = nagents
 
         csv_write_file = joinpath(csv_write_dir, 
-                              savename("compare_group_prevalence", model_kwargs, "csv"))
+                              savename("plot_series", model_kwargs, "csv"))
 
         CSV.write(csv_write_file, adf)
 
-        pdf_write_dir = joinpath(base_pdf_write_dir, string(group_w_innovation))
+        pdf_write_dir = joinpath(base_pdf_write_dir, string(neighborhood_w_innovation))
 
         R"""
-        plot_group_freq_series($csv_write_file, write_dir = $pdf_write_dir)
+        plot_neighborhood_freq_series($csv_write_file, write_dir = $pdf_write_dir)
         """
     end
 end
 
 
-
-function compare_group_prevalence(nagents = 100; ntrials = 10, model_kwargs...)
+# Used above to generate agent and model dataframes with given number of trials,
+# which the above function then plots.
+function run_simulations_for_plot_series(nagents = 100; ntrials = 10, model_kwargs...)
     
     frac_a(v) = sum(v .== a) / length(v)
 
-    is_minority(x) = x.group == 1
+    is_minority(x) = x.home_neighborhood == 1
 
     frac_a_ifdata(v) = isempty(v) ? 0.0 : frac_a(collect(v))
 
@@ -339,7 +341,7 @@ function compare_group_prevalence(nagents = 100; ntrials = 10, model_kwargs...)
              (:curr_trait, frac_a_ifdata, !is_minority),
             ]
 
-    mdata = [:a_fitness, :group_1_frac, :rep_idx, :homophily_1, :homophily_2]
+    mdata = [:a_fitness, :neighborhood_1_frac, :rep_idx, :home_is_work_prob_1, :home_is_work_prob_2]
 
     function stopfn_fixated(model, step)
         agents = allagents(model)
@@ -351,7 +353,7 @@ function compare_group_prevalence(nagents = 100; ntrials = 10, model_kwargs...)
     end
 
     # model = cba_model(nagents; model_kwargs...)
-    models = [cba_model(nagents; model_kwargs...) for _ in 1:ntrials]
+    models = [coordchg_model(nagents; model_kwargs...) for _ in 1:ntrials]
 
     adf, mdf = ensemblerun!(models, agent_step!, model_step!, stopfn_fixated; adata, mdata)
     println(adf)

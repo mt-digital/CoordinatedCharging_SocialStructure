@@ -22,24 +22,25 @@ end
 @everywhere include("model.jl")
 
 
-function coordch_experiment(nagents=100; a_fitness = 2.0, 
-                            homophily = [
-                             collect(0.0:0.05:0.95)..., 0.99
-                            ],
+function coordch_experiment(nagents=100; a_fitness = 1.2, 
                             neighborhood_1_frac = collect(0.05:0.05:0.5), 
-                            neighborhood_w_innovation = 1, nreplicates=10, 
+                            neighborhood_w_innovation = 1, 
+                            home_is_work_prob_1 = [0.2, 0.5, 0.8],
+                            home_is_work_prob_2 = [0.2, 0.5, 0.8],
+                            learn_at_home_prob_1 = [0.2, 0.5, 0.8],
+                            learn_at_home_prob_2 = [0.2, 0.5, 0.8],
+                            learn_at_work_prob_1 = [0.2, 0.5, 0.8],
+                            learn_at_work_prob_2 = [0.2, 0.5, 0.8],
+                            nreplicates=10, 
                             allsteps = false)
 
     rep_idx = collect(1:nreplicates)
 
-    homophily_1 = homophily
-    homophily_2 = homophily
-
     params_list = dict_list(
-        @dict homophily_1 homophily_2 group_1_frac a_fitness rep_idx
+        @dict a_fitness neighborhood_1_frac home_is_work_prob_1 home_is_work_prob_2 learn_at_home_prob_1 learn_at_home_prob_2 learn_at_work_prob_1 learn_at_work_prob_2 rep_idx
     )
 
-    models = [coordcgh_model(nagents; group_w_innovation, params...) 
+    models = [coordcgh_model(nagents; neighborhood_w_innovation, params...) 
               for params in params_list]
 
     # adata = [(:curr_trait, fixated)]

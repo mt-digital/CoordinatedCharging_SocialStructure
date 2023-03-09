@@ -11,10 +11,10 @@ mutable struct Agent <: AbstractAgent
     id::Int
 
     home_neighborhood::Int
-    home_learnprob::Float64
+    learn_at_home_prob::Float64
 
     work_neighborhood::Int
-    work_learnprob::Float64
+    learn_at_work_prob::Float64
 
     curr_trait::Trait
     next_trait::Trait
@@ -80,8 +80,9 @@ end
 # Generic function for agent step either at "home" or "work" `loc`ation.
 function loc_step!(focal_agent::Agent, model::ABM, location::String)
 
-    learnprob = location == "work" ? focal_agent.work_learnprob :
-                                     focal_agent.home_learnprob
+    # Set probability of learning based on agent's current location.
+    learnprob = location == "work" ? focal_agent.learn_at_work_prob :
+                                     focal_agent.learn_at_home_prob
 
     # Use probability of learning for location to maybe learn from a teacher.
     if rand() < learnprob
@@ -92,15 +93,15 @@ end
 
 ##
 # w_i: "preference" for workplace in one's own neighborhood i
-# work_learnprob_i: probability agent learns from workplace in neighborhood i
-# home_learnprob_i: probability agent learns when home from others in neighborhood
+# learn_at_work_prob_i: probability agent learns from workplace in neighborhood i
+# learn_at_home_prob_i: probability agent learns when home from others in neighborhood
 #
 function coordchg_model(nagents = 100; neighborhood_1_frac = 0.05, 
                        neighborhood_w_innovation = 1,
                        A_fitness = 1.0, a_fitness = 1.2, 
-                       w_1 = 0.5, w_2 = 0.5, 
-                       work_learnprob_1 = 1.0, work_learnprob_2 = 1.0,
-                       home_learnprob_1 = 1.0, home_learnprob_2 = 1.0, 
+                       home_is_work_prob_1 = 0.5, home_is_work_prob_2 = 0.5, 
+                       learn_at_work_prob_1 = 0.5, learn_at_work_prob_2 = 0.5,
+                       learn_at_home_prob_1 = 0.5, learn_at_home_prob_2 = 0.5, 
                        rep_idx = nothing, 
                        model_parameters...)
 
@@ -113,7 +114,7 @@ function coordchg_model(nagents = 100; neighborhood_1_frac = 0.05,
     end
 
 
-    properties = @dict trait_fitness_dict a_fitness w_1 w_2 neighborhood_1_frac rep_idx nagents w_1 w_2 work_learnprob_1 work_learnprob_2 home_learnprob_1 home_learnprob_2
+    properties = @dict trait_fitness_dict a_fitness home_is_work_prob_1 home_is_work_prob_2 neighborhood_1_frac rep_idx nagents home_is_work_prob_1 home_is_work_prob_2 learn_at_work_prob_1 learn_at_work_prob_2 learn_at_home_prob_1 learn_at_home_prob_2
 
     model = ABM(Agent, scheduler = Schedulers.fastest; properties)
     N_1_ceil_cutoff = ceil(neighborhood_1_frac * nagents)
@@ -127,15 +128,15 @@ function coordchg_model(nagents = 100; neighborhood_1_frac = 0.05,
 
             # Set neighborhood, workplace details.
             home_neighborhood = 1
-            work_neighborhood = rand() < w_1 ? 1 : 2
+            work_neighborhood = rand() < home_is_work_prob_1 ? 1 : 2
 
             if work_neighborhood == 1
-                work_learnprob = work_learnprob_1
+                learn_at_work_prob = learn_at_work_prob_1
             else
-                work_learnprob = work_learnprob_2
+                learn_at_work_prob = learn_at_work_prob_2
             end
 
-            home_learnprob = home_learnprob_1
+            learn_at_home_prob = learn_at_home_prob_1
 
             # Determine whether the agent should start with coord charge trait.
             if (((neighborhood_w_innovation == 1) 
@@ -150,13 +151,13 @@ function coordchg_model(nagents = 100; neighborhood_1_frac = 0.05,
 
             # Set neighborhood, workplace details.
             home_neighborhood = 2
-            work_neighborhood = rand() < w_2 ? 2 : 1
+            work_neighborhood = rand() < home_is_work_prob_2 ? 2 : 1
             if work_neighborhood == 1
-                work_learnprob = work_learnprob_1
+                learn_at_work_prob = learn_at_work_prob_1
             else
-                work_learnprob = work_learnprob_2
+                learn_at_work_prob = learn_at_work_prob_2
             end
-            home_learnprob = home_learnprob_2
+            learn_at_home_prob = learn_at_home_prob_2
 
 
             # Determine whether the agent should start with innovation or not.
@@ -170,8 +171,8 @@ function coordchg_model(nagents = 100; neighborhood_1_frac = 0.05,
         end
         
         agent_to_add = Agent(aidx, 
-                             home_neighborhood, home_learnprob, 
-                             work_neighborhood, work_learnprob, 
+                             home_neighborhood, learn_at_home_prob, 
+                             work_neighborhood, learn_at_work_prob, 
                              trait, trait)
 
         add_agent!(agent_to_add, model)
