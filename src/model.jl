@@ -91,6 +91,7 @@ function loc_step!(focal_agent::Agent, model::ABM, location::String)
     end
 end
 
+
 ##
 # w_i: "preference" for workplace in one's own neighborhood i
 # learn_at_work_prob_i: probability agent learns from workplace in neighborhood i
@@ -100,8 +101,8 @@ function coordchg_model(nagents = 100; neighborhood_1_frac = 0.05,
                        neighborhood_w_innovation = 1,
                        A_fitness = 1.0, a_fitness = 1.2, 
                        home_is_work_prob_1 = 0.5, home_is_work_prob_2 = 0.5, 
-                       learn_at_work_prob_1 = 0.5, learn_at_work_prob_2 = 0.5,
-                       learn_at_home_prob_1 = 0.5, learn_at_home_prob_2 = 0.5, 
+                       learn_at_work_prob_1 = 1.0, learn_at_work_prob_2 = 1.0,
+                       learn_at_home_prob_1 = 0.0, learn_at_home_prob_2 = 0.0, 
                        rep_idx = nothing, 
                        model_parameters...)
 
@@ -158,7 +159,6 @@ function coordchg_model(nagents = 100; neighborhood_1_frac = 0.05,
                 learn_at_work_prob = learn_at_work_prob_2
             end
             learn_at_home_prob = learn_at_home_prob_2
-
 
             # Determine whether the agent should start with innovation or not.
             if (((neighborhood_w_innovation == 2) || (neighborhood_w_innovation == "Both")) 

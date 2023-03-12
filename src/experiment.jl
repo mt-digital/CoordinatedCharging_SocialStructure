@@ -25,12 +25,12 @@ end
 function coordchg_experiment(nagents=100; a_fitness = 1.2, 
                             neighborhood_1_frac = collect(0.1:0.1:0.5), 
                             neighborhood_w_innovation = 1, 
-                            home_is_work_prob_1 =  collect(0.1:0.2:0.9),
-                            home_is_work_prob_2 =  collect(0.1:0.2:0.9),
-                            learn_at_home_prob_1 = [0.5],
-                            learn_at_home_prob_2 = [0.5],
-                            learn_at_work_prob_1 = [0.5],
-                            learn_at_work_prob_2 = [0.5],
+                            home_is_work_prob_1 =  collect(0.1:0.05:0.9),
+                            home_is_work_prob_2 =  collect(0.1:0.05:0.9),
+                            learn_at_home_prob_1 = [0.1],
+                            learn_at_home_prob_2 = [0.1],
+                            learn_at_work_prob_1 = [1.0],
+                            learn_at_work_prob_2 = [1.0],
                             nreplicates=10, 
                             allsteps = false)
 
